@@ -2,6 +2,7 @@ import { parseSavegame } from "./savegameParser.mjs";
 import { DataManager } from "./dataManager.mjs";
 import "./components/SectionComponent.mjs";
 import "./components/SectionItemComponent.mjs";
+import "./components/ConversionComponent.mjs";
 
 let dataManager;
 let sectionsExpanded = false;
@@ -92,17 +93,49 @@ function renderSavegameData(savegameData) {
   sectionsContainer.id = "sections-container";
   editorContainer.appendChild(sectionsContainer);
 
+  // Make dataManager globally accessible for components
+  window.dataManager = dataManager;
+
   const entries = Object.entries(savegameData);
   let delay = 0;
 
   entries.forEach(([sectionKey, sectionData]) => {
     // Add a small delay for each array section to allow time for rendering
     setTimeout(() => {
+      // Create a container for each section (to allow for conversion component placement)
+      const sectionWrapper = document.createElement("div");
+      sectionWrapper.className = "section-wrapper";
+      sectionsContainer.appendChild(sectionWrapper);
+
+      // Create conversion component if the section is an array of objects
+      if (
+        Array.isArray(sectionData) &&
+        sectionData.length > 0 &&
+        typeof sectionData[0] === "object"
+      ) {
+        // Get first item's keys for potential conversion properties
+        const firstItem = sectionData[0];
+        if (firstItem && typeof firstItem === "object") {
+          const propertyKeys = Object.keys(firstItem);
+
+          // Only add conversion component if there are properties to convert
+          if (propertyKeys.length > 0) {
+            const conversionComponent = document.createElement(
+              "conversion-component"
+            );
+            conversionComponent.setAttribute("section-key", sectionKey);
+            conversionComponent.setAttribute("item-key", propertyKeys[0]); // Default to first property
+            conversionComponent.propertyOptions = propertyKeys;
+            sectionWrapper.appendChild(conversionComponent);
+          }
+        }
+      }
+
       const sectionComponent = document.createElement("section-component");
       sectionComponent.setAttribute("section-key", sectionKey);
       sectionComponent.data = sectionData;
       sectionComponent.addEventListener("value-changed", handleValueChange);
-      sectionsContainer.appendChild(sectionComponent);
+      sectionWrapper.appendChild(sectionComponent);
     }, delay);
 
     // Increment delay for array sections to avoid rendering conflicts

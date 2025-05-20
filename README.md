@@ -3,13 +3,14 @@
 A minimalistic editor for [The Planet Crafter](https://store.steampowered.com/app/1284190/The_Planet_Crafter/) savegame files.
 
 ⚠️ **Always make backups of your savegames before using this tool** ⚠️
+It should be stable (I'm testing it myself with my games), but it is quite easy to break your save by changing values that you shouldn't.
 
 Can be used online at: [https://kartones.net/demos/032/](https://kartones.net/demos/032/)
 
 ## Features
 
 - Load savegame files and display their contents
-- Editing fields (check my post for details)
+- Editing fields, and mass replacing them (check [my blog post](https://blog.kartones.net/post/the-planet-crafter-savegame-edit/) for further details)
 - Saving changes (generates a new savegame file)
 
 ## Installation
