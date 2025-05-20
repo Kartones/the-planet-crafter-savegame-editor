@@ -1,0 +1,15 @@
+{
+  "name": "planet-crafter-editor",
+  "version": "0.1.0",
+  "description": "Editor for The Planet Crafter savegame files",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "http-server -p 8080 -c-1"
+  },
+  "author": "Kartones",
+  "license": "The Unlicense",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

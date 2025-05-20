@@ -1,0 +1,43 @@
+# OS specific files
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# Editor directories and files
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Distribution / packaging
+dist/
+build/
+
+# Temporary files
+tmp/
+temp/
+
+# Environment variables
+.env
+.env.local
+
+# Cache
+.sass-cache/
+.cache/
+
+# Various backup files
+*.bak
+*.swp
+*~
+
+node_modules/
+
+.cursor/
+# my savegames, for validation
+savegames/
+tests/savegameFiles.test.js
