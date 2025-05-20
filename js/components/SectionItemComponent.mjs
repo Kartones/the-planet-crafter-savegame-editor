@@ -100,7 +100,8 @@ export class SectionItemComponent extends HTMLElement {
     const inputs = this.shadowRoot.querySelectorAll("input, select");
     inputs.forEach((input) => {
       input.addEventListener("change", (e) => {
-        this.handleValueChange(e.target.value);
+        const propertyName = e.target.getAttribute("data-property");
+        this.handleValueChange(e.target.value, propertyName);
       });
     });
   }
@@ -250,17 +251,18 @@ export class SectionItemComponent extends HTMLElement {
     `;
   }
 
-  handleValueChange(newValue) {
+  handleValueChange(newValue, propertyName) {
     // notify parent components that a value has changed
     const event = new CustomEvent("value-changed", {
       bubbles: true,
       composed: true,
       detail: {
-        key: this.key,
+        key: propertyName || this.key,
         index: this.index,
         type: this.type,
         oldValue: this.value,
         newValue: newValue,
+        propertyName: propertyName,
       },
     });
     this.dispatchEvent(event);

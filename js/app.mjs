@@ -29,8 +29,7 @@ async function handleLoadSavegame() {
 
           renderSavegameData(savegameData);
 
-          // TODO: check if works correctly before enabling, and add tests
-          // addSaveButton();
+          addSaveButton();
 
           addToggleSectionsButton();
         } catch (error) {
@@ -78,7 +77,7 @@ function renderSavegameData(savegameData) {
 }
 
 function handleValueChange(event) {
-  const { key, index, type, oldValue, newValue } = event.detail;
+  const { key, index, type, oldValue, newValue, propertyName } = event.detail;
 
   const sectionComponent = event.target.closest("section-component");
   const sectionKey = sectionComponent.getAttribute("section-key");
@@ -89,11 +88,12 @@ function handleValueChange(event) {
     index,
     type,
     newValue,
+    propertyName,
   });
 }
 
 function onDataChanged(data) {
-  console.log("Data changed:", data);
+  // console.log("Data changed:", data);
   // Here we could implement additional logic when data changes
   // For example, we might want to update the UI or enable/disable save buttons
 }
