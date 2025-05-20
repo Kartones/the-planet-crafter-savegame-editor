@@ -16,7 +16,7 @@ export function parseSavegame(fileContent) {
 
     try {
       const lines = trimmedSection.split("\n");
-      // If the line ends with a pipe, the section is an array of objects,
+      // If any line ends with a pipe, the section is an array of objects,
       // each on a line delimited by a pipe
       const hasPipeEnding = lines.some((line) => line.trim().endsWith("|"));
 
@@ -27,14 +27,18 @@ export function parseSavegame(fileContent) {
           const line = lines[i].trim();
           if (!line) continue;
 
-          if (line.endsWith("|")) {
-            const jsonString = line.slice(0, -1);
-            try {
-              const parsed = JSON.parse(jsonString);
-              results.push(parsed);
-            } catch (lineError) {
-              console.error(`Error parsing line ${i}:`, lineError);
-            }
+          const jsonString = line.endsWith("|") ? line.slice(0, -1) : line;
+
+          try {
+            const parsed = JSON.parse(jsonString);
+            results.push(parsed);
+          } catch (lineError) {
+            console.error(
+              `Error parsing line ${i} in section ${sectionKey}:`,
+              lineError,
+              "Line content:",
+              jsonString
+            );
           }
         }
 
@@ -44,11 +48,15 @@ export function parseSavegame(fileContent) {
           try {
             savegameData[sectionKey] = JSON.parse(trimmedSection);
           } catch (sectionError) {
-            console.error(`Error parsing section ${sectionKey}:`, sectionError);
+            console.error(
+              `Error parsing section ${sectionKey} as JSON:`,
+              sectionError
+            );
+            savegameData[sectionKey] = []; // Set as empty array instead of null
           }
         }
       } else {
-        // If the line does not end with a pipe, the section is a standard JSON object
+        // If no line ends with a pipe, the section is a standard JSON object
         try {
           savegameData[sectionKey] = JSON.parse(trimmedSection);
         } catch (sectionError) {
@@ -56,6 +64,7 @@ export function parseSavegame(fileContent) {
             `Error parsing trimmed section ${sectionKey}:`,
             sectionError
           );
+          savegameData[sectionKey] = null;
         }
       }
     } catch (error) {

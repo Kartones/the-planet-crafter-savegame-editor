@@ -2,11 +2,12 @@
 
 A minimalistic editor for The Planet Crafter savegame files.
 
+⚠️ Vibe-coding experiment ⚠️ The code will be manually cleaned up and improved, and this message will go away when done so. **Always make backups of your savegames before using this tool**. ⚠️
+
 ## Features
 
-- Load savegame files in the custom format
-- Parse and display savegame data
-- More features coming soon...
+- Load savegame files and display their contents
+- Editing and saving coming soon
 
 ## Installation
 

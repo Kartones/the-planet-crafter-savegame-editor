@@ -3,6 +3,8 @@
     --secondary-color: #2c3e50;
     --background-color: #f5f5f5;
     --text-color: #333;
+    --border-color: #ddd;
+    --hover-background: #f0f0f0;
 }
 
 * {
@@ -17,6 +19,8 @@ body {
     color: var(--text-color);
     line-height: 1.6;
     padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 header {
@@ -25,7 +29,22 @@ header {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-color);
+}
+
+header button {
+    margin-left: 10px;
+}
+
+/* Button styles */
+#toggle-sections {
+    background-color: var(--secondary-color);
+}
+
+/* Create button group when multiple buttons */
+header div.button-group {
+    display: flex;
+    gap: 10px;
 }
 
 h1 {
@@ -41,6 +60,7 @@ button {
     border-radius: 4px;
     cursor: pointer;
     font-size: 1rem;
+    transition: opacity 0.2s;
 }
 
 button:hover {
@@ -53,4 +73,66 @@ button:hover {
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     min-height: 300px;
+}
+
+#sections-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+/* Make sure section items have proper spacing */
+section-component {
+    display: block;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Add some hover effect for collapsible sections */
+section-component::part(section-header) {
+    transition: background-color 0.2s;
+}
+
+section-component::part(section-header):hover {
+    background-color: var(--hover-background);
+}
+
+/* Custom scrollbar for better visuals */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #sections-container {
+        grid-template-columns: 1fr;
+    }
+
+    body {
+        padding: 10px;
+    }
+
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    header button {
+        margin-top: 10px;
+    }
 }
