@@ -1,6 +1,6 @@
 # The Planet Crafter Editor
 
-A minimalistic editor for The Planet Crafter savegame files.
+A minimalistic editor for [The Planet Crafter](https://store.steampowered.com/app/1284190/The_Planet_Crafter/) savegame files.
 
 ⚠️ Vibe-coding experiment ⚠️ The code will be manually cleaned up and improved, and this message will go away when done so. **Always make backups of your savegames before using this tool**. ⚠️
 
@@ -8,6 +8,7 @@ A minimalistic editor for The Planet Crafter savegame files.
 
 - Load savegame files and display their contents
 - Editing and saving coming soon
+- Saving works, I'll put up an online version of the editor.
 
 ## Installation
 
