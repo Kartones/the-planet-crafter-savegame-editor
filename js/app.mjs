@@ -9,6 +9,42 @@ let sectionsExpanded = false;
 function initialize() {
   const loadButton = document.getElementById("load-savegame");
   loadButton.addEventListener("click", handleLoadSavegame);
+
+  createScrollToTopButton();
+}
+
+function createScrollToTopButton() {
+  if (document.getElementById("scroll-to-top")) {
+    return;
+  }
+
+  const scrollButton = document.createElement("button");
+  scrollButton.id = "scroll-to-top";
+  scrollButton.innerHTML = "&#8679;";
+  scrollButton.style.display = "none";
+
+  document.body.appendChild(scrollButton);
+
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 300) {
+      scrollButton.style.display = "block";
+    } else {
+      scrollButton.style.display = "none";
+    }
+  });
+
+  scrollButton.addEventListener("click", () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  });
+
+  setTimeout(() => {
+    if (window.scrollY > 300) {
+      scrollButton.style.display = "block";
+    }
+  }, 500);
 }
 
 async function handleLoadSavegame() {
