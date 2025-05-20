@@ -1,6 +1,6 @@
 {
   "name": "planet-crafter-editor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Editor for The Planet Crafter savegame files",
   "type": "module",
   "scripts": {
