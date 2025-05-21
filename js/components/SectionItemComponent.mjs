@@ -60,7 +60,7 @@ export class SectionItemComponent extends HTMLElement {
 
   render() {
     this.shadowRoot.innerHTML = `
-      <link rel="stylesheet" href="/css/styles.css">
+      <link rel="stylesheet" href="css/styles.css">
       ${this.renderItem()}
     `;
 

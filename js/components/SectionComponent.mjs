@@ -63,7 +63,7 @@ export class SectionComponent extends HTMLElement {
     }
 
     this.shadowRoot.innerHTML = `
-      <link rel="stylesheet" href="/css/styles.css">
+      <link rel="stylesheet" href="css/styles.css">
       <div class="section">
         <div class="section-header collapsed" part="section-header">${
           this.sectionKey

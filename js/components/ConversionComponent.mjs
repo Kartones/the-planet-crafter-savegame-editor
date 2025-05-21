@@ -53,7 +53,7 @@ export class ConversionComponent extends HTMLElement {
     this._saveInputValues();
 
     this.shadowRoot.innerHTML = `
-      <link rel="stylesheet" href="/css/styles.css">
+      <link rel="stylesheet" href="css/styles.css">
       <div class="conversion-container">
         ${this.renderPropertySelector()}
         <span class="conversion-label">Convert all from</span>

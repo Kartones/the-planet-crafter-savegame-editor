@@ -41,3 +41,5 @@ node_modules/
 # my savegames, for validation
 savegames/
 tests/savegameFiles.test.js
+
+sync.sh
