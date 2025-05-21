@@ -21,79 +21,46 @@ export class SectionItemComponent extends HTMLElement {
   }
 
   loadArrayItemData() {
-    if (this.type === "array-item" && this.parentElement) {
-      const parentComponent = this.closest("section-component");
-      if (!parentComponent) {
-        return;
-      }
+    if (this.type !== "array-item") return;
 
-      if (this.index === null || this.index === undefined) {
-        return;
-      }
+    // In the new structure, we are in the shadow DOM of the section component
+    // So we need to navigate up through the shadow DOM to find the section component
+    let parentComponent = null;
 
-      if (typeof parentComponent.getArrayItemAt === "function") {
-        this.arrayItemData = parentComponent.getArrayItemAt(this.index);
-        if (this.arrayItemData !== undefined) {
-          return;
-        }
-      }
+    // Get the parent section component (which is the host of this shadow root)
+    const shadowRoot = this.getRootNode();
+    if (shadowRoot && shadowRoot.host) {
+      parentComponent = shadowRoot.host;
+    }
 
-      if (parentComponent.data && Array.isArray(parentComponent.data)) {
-        const numericIndex = parseInt(this.index, 10);
-        if (
-          !isNaN(numericIndex) &&
-          numericIndex >= 0 &&
-          numericIndex < parentComponent.data.length
-        ) {
-          this.arrayItemData = parentComponent.data[numericIndex];
-        }
+    if (!parentComponent) {
+      parentComponent = this.closest("section-component");
+      if (!parentComponent) return;
+    }
+
+    if (this.index === null || this.index === undefined) return;
+
+    if (typeof parentComponent.getArrayItemAt === "function") {
+      this.arrayItemData = parentComponent.getArrayItemAt(this.index);
+      return;
+    }
+
+    // Fallback to direct array access
+    if (parentComponent.data && Array.isArray(parentComponent.data)) {
+      const numericIndex = parseInt(this.index, 10);
+      if (
+        !isNaN(numericIndex) &&
+        numericIndex >= 0 &&
+        numericIndex < parentComponent.data.length
+      ) {
+        this.arrayItemData = parentComponent.data[numericIndex];
       }
     }
   }
 
   render() {
     this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          margin-bottom: 8px;
-        }
-        .item {
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-        }
-        .item-label {
-          min-width: 150px;
-          font-weight: bold;
-          margin-right: 10px;
-        }
-        input {
-          padding: 6px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          flex: 1;
-        }
-        select {
-          padding: 6px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-        }
-        .null-value {
-          color: #888;
-          font-style: italic;
-        }
-        .array-item {
-          border: 1px solid #eee;
-          padding: 10px;
-          margin-bottom: 8px;
-          border-radius: 4px;
-        }
-        .array-item-header {
-          font-weight: bold;
-          margin-bottom: 5px;
-        }
-      </style>
+      <link rel="stylesheet" href="/css/styles.css">
       ${this.renderItem()}
     `;
 
@@ -165,19 +132,19 @@ export class SectionItemComponent extends HTMLElement {
     const numIndex = parseInt(this.index, 10);
     const itemNumber = !isNaN(numIndex) ? numIndex + 1 : "?";
 
-    if (this.arrayItemData === undefined) {
+    if (!this.arrayItemData || this.arrayItemData === undefined) {
       this.loadArrayItemData();
+    }
 
-      if (this.arrayItemData === undefined) {
-        return `
-          <div class="array-item">
-            <div class="item">
-              <div class="item-label">Item ${itemNumber}</div>
-              <div class="null-value">&lt;Error: Unable to load item&gt;</div>
-            </div>
+    if (this.arrayItemData === undefined) {
+      return `
+        <div class="array-item">
+          <div class="item">
+            <div class="item-label">Item ${itemNumber}</div>
+            <div class="null-value">&lt;Error: Unable to load item&gt;</div>
           </div>
-        `;
-      }
+        </div>
+      `;
     }
 
     if (this.arrayItemData === null) {
@@ -208,7 +175,6 @@ export class SectionItemComponent extends HTMLElement {
         <div class="array-item-header">Item ${itemNumber}</div>
         ${Object.entries(this.arrayItemData)
           .map(([key, value]) => {
-            // For each property in the object
             if (value === null) {
               return `
               <div class="item">
@@ -252,7 +218,6 @@ export class SectionItemComponent extends HTMLElement {
   }
 
   handleValueChange(newValue, propertyName) {
-    // notify parent components that a value has changed
     const event = new CustomEvent("value-changed", {
       bubbles: true,
       composed: true,

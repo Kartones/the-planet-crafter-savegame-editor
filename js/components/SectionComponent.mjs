@@ -4,6 +4,7 @@ export class SectionComponent extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.getArrayItemAt = this.getArrayItemAt.bind(this);
     this.toggleCollapse = this.toggleCollapse.bind(this);
+    this._conversionComponent = null;
   }
 
   connectedCallback() {
@@ -18,6 +19,13 @@ export class SectionComponent extends HTMLElement {
 
   get data() {
     return this._data;
+  }
+
+  set conversionComponent(component) {
+    this._conversionComponent = component;
+    if (this.shadowRoot.innerHTML) {
+      this.render();
+    }
   }
 
   toggleCollapse(event) {
@@ -44,63 +52,27 @@ export class SectionComponent extends HTMLElement {
       return;
     }
 
+    let conversionComponent = this._conversionComponent;
+    if (!conversionComponent && this.shadowRoot) {
+      const conversionContainer = this.shadowRoot.querySelector(
+        "#conversion-container"
+      );
+      if (conversionContainer && conversionContainer.firstChild) {
+        conversionComponent = conversionContainer.firstChild;
+      }
+    }
+
     this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          margin-bottom: 20px;
-        }
-        .section {
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          overflow: hidden;
-        }
-        .section-header {
-          background-color: #f5f5f5;
-          padding: 10px;
-          font-weight: bold;
-          border-bottom: 1px solid #ddd;
-          cursor: pointer;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          user-select: none;
-        }
-        .section-header::after {
-          content: "▼";
-          font-size: 0.8em;
-          transition: transform 0.2s;
-          opacity: 0.7;
-          margin-left: 5px;
-        }
-        .section-header.collapsed::after {
-          transform: rotate(-90deg);
-        }
-        .section-header:hover::after {
-          opacity: 1;
-        }
-        .section-content {
-          padding: 15px;
-          transition: max-height 0.3s ease-out, padding 0.3s ease-out;
-          overflow: hidden;
-        }
-        .section-content.collapsed {
-          max-height: 0;
-          padding: 0 15px;
-          border-bottom: none;
-          visibility: hidden;
-        }
-        .empty-message {
-          color: #888;
-          font-style: italic;
-        }
-      </style>
+      <link rel="stylesheet" href="/css/styles.css">
       <div class="section">
         <div class="section-header collapsed" part="section-header">${
           this.sectionKey
         }</div>
         <div class="section-content collapsed" id="content">
-          ${this.renderContent()}
+          <div id="conversion-container"></div>
+          <div class="section-items">
+            ${this.renderContent()}
+          </div>
         </div>
       </div>
     `;
@@ -108,6 +80,17 @@ export class SectionComponent extends HTMLElement {
     const header = this.shadowRoot.querySelector(".section-header");
     if (header) {
       header.addEventListener("click", this.toggleCollapse);
+    }
+
+    this._conversionComponent = conversionComponent;
+
+    if (this._conversionComponent) {
+      const conversionContainer = this.shadowRoot.querySelector(
+        "#conversion-container"
+      );
+      if (conversionContainer) {
+        conversionContainer.appendChild(this._conversionComponent);
+      }
     }
 
     if (Array.isArray(this._data)) {
@@ -119,7 +102,6 @@ export class SectionComponent extends HTMLElement {
           const index = parseInt(item.getAttribute("data-index"), 10);
           if (!isNaN(index) && index >= 0 && index < this._data.length) {
             item.arrayItemData = this._data[index];
-            // Force a re-render of the item
             if (typeof item.render === "function") {
               item.render();
             }
@@ -144,25 +126,22 @@ export class SectionComponent extends HTMLElement {
     }
 
     if (Array.isArray(this._data)) {
-      // TODO: use map instead of for loop
-      let itemsHtml = "";
-      for (let index = 0; index < this._data.length; index++) {
-        const item = this._data[index];
-        let valueAttr = "";
-        if (item === null) {
-          valueAttr = "null";
-        } else if (typeof item !== "object") {
-          valueAttr = item.toString();
-        }
+      return this._data
+        .map((item, index) => {
+          let valueAttr = "";
+          if (item === null) {
+            valueAttr = "null";
+          } else if (typeof item !== "object") {
+            valueAttr = item.toString();
+          }
 
-        itemsHtml += `<section-item
+          return `<section-item
           data-index="${index}"
           data-type="array-item"
           data-value="${valueAttr}">
         </section-item>`;
-      }
-
-      return itemsHtml;
+        })
+        .join("");
     }
 
     if (typeof this._data !== "object") {
@@ -194,6 +173,25 @@ export class SectionComponent extends HTMLElement {
   }
 
   getArrayItemAt(index) {
+    const dataManager = window.dataManager;
+    if (dataManager) {
+      const sectionKey = this.getAttribute("section-key");
+      if (sectionKey) {
+        const freshData = dataManager.getSectionData(sectionKey);
+        if (Array.isArray(freshData) && index !== null && index !== undefined) {
+          const numIndex = parseInt(index, 10);
+          if (
+            !isNaN(numIndex) &&
+            numIndex >= 0 &&
+            numIndex < freshData.length
+          ) {
+            return freshData[numIndex];
+          }
+        }
+      }
+    }
+
+    // Fall back to local data if dataManager is not available
     if (Array.isArray(this._data) && index !== null && index !== undefined) {
       const numIndex = parseInt(index, 10);
       if (!isNaN(numIndex) && numIndex >= 0 && numIndex < this._data.length) {

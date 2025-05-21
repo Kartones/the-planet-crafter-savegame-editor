@@ -50,82 +50,29 @@ export class ConversionComponent extends HTMLElement {
   }
 
   render() {
-    // Save current input values before re-rendering
     this._saveInputValues();
 
     this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          margin-bottom: 15px;
-        }
-        .conversion-container {
-          border: 1px solid #ddd;
-          padding: 10px;
-          border-radius: 4px;
-          background-color: #f9f9f9;
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-        }
-        .conversion-label {
-          margin: 0 8px;
-          font-weight: bold;
-        }
-        input, select {
-          padding: 6px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-        }
-        input {
-          width: 120px;
-        }
-        .property-selector {
-          margin-right: 8px;
-        }
-        button {
-          padding: 6px 12px;
-          background-color: #4CAF50;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          margin-left: 10px;
-          transition: background-color 0.2s;
-        }
-        button:disabled {
-          background-color: #cccccc;
-          cursor: not-allowed;
-        }
-        button:hover:not(:disabled) {
-          background-color: #45a049;
-        }
-        @media (max-width: 600px) {
-          .conversion-container {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          input, button, select {
-            margin-top: 8px;
-          }
-          button {
-            margin-left: 0;
-          }
-        }
-      </style>
+      <link rel="stylesheet" href="/css/styles.css">
       <div class="conversion-container">
         ${this.renderPropertySelector()}
         <span class="conversion-label">Convert all from</span>
-        <input type="text" id="from-value" placeholder="Value to replace" value="${
+        <input type="text" id="from-value" placeholder="Old value" value="${
           this._fromValue
         }">
         <span class="conversion-label">into</span>
         <input type="text" id="to-value" placeholder="New value" value="${
           this._toValue
         }">
-        <button id="apply-conversion" ${
-          !this._fromValue.trim() || !this._toValue.trim() ? "disabled" : ""
-        }>Apply</button>
+        <button
+          id="apply-conversion"
+          ${!this._fromValue.trim() || !this._toValue.trim() ? "disabled" : ""}
+          title="${
+            !this._fromValue.trim() || !this._toValue.trim()
+              ? "Please enter both old and new values"
+              : "Click to convert values"
+          }"
+        >Apply</button>
       </div>
     `;
 
@@ -203,7 +150,6 @@ export class ConversionComponent extends HTMLElement {
       return;
     }
 
-    // Get a reference to the DataManager
     const dataManager = window.dataManager || this.getDataManager();
     if (!dataManager) {
       console.error("DataManager not found");
@@ -220,13 +166,50 @@ export class ConversionComponent extends HTMLElement {
     const affectedComponents = [];
 
     if (Array.isArray(sectionData)) {
-      // Handle array data
       for (let i = 0; i < sectionData.length; i++) {
         const item = sectionData[i];
-        if (item && typeof item === "object" && this.itemKey in item) {
-          if (String(item[this.itemKey]) === String(fromValue)) {
-            // Apply conversion based on the original value type
-            const originalType = typeof item[this.itemKey];
+
+        if (!item || typeof item !== "object") {
+          console.log(`Item ${i} is not an object:`, item);
+          continue;
+        }
+
+        if (!(this.itemKey in item)) {
+          console.log(`Item ${i} does not have property '${this.itemKey}'`);
+          continue;
+        }
+
+        const currentValue = item[this.itemKey];
+        const currentValueStr = String(currentValue).trim();
+        const fromValueStr = String(fromValue).trim();
+
+        if (currentValueStr === fromValueStr) {
+          const originalType = typeof currentValue;
+
+          const convertedValue = this.convertValueToType(toValue, originalType);
+
+          dataManager.updateValue({
+            sectionKey: this.sectionKey,
+            index: i,
+            type: "array-item",
+            propertyName: this.itemKey,
+            newValue: convertedValue,
+          });
+
+          conversionCount++;
+          affectedComponents.push({ index: i, property: this.itemKey });
+        }
+      }
+    } else if (typeof sectionData === "object" && sectionData !== null) {
+      for (const key in sectionData) {
+        if (key === this.itemKey) {
+          const currentValue = sectionData[key];
+          const currentValueStr = String(currentValue).trim();
+          const fromValueStr = String(fromValue).trim();
+
+          if (currentValueStr === fromValueStr) {
+            const originalType = typeof currentValue;
+
             const convertedValue = this.convertValueToType(
               toValue,
               originalType
@@ -234,101 +217,46 @@ export class ConversionComponent extends HTMLElement {
 
             dataManager.updateValue({
               sectionKey: this.sectionKey,
-              index: i,
-              type: "array-item",
-              propertyName: this.itemKey,
+              key: this.itemKey,
               newValue: convertedValue,
             });
 
             conversionCount++;
-
-            // Track which items were affected
-            affectedComponents.push({ index: i, property: this.itemKey });
+            affectedComponents.push({ key: key });
           }
-        }
-      }
-    } else if (typeof sectionData === "object" && sectionData !== null) {
-      // Handle object data
-      for (const key in sectionData) {
-        if (
-          key === this.itemKey &&
-          String(sectionData[key]) === String(fromValue)
-        ) {
-          const originalType = typeof sectionData[key];
-          const convertedValue = this.convertValueToType(toValue, originalType);
-
-          dataManager.updateValue({
-            sectionKey: this.sectionKey,
-            key: this.itemKey,
-            newValue: convertedValue,
-          });
-
-          conversionCount++;
-
-          // Track which keys were affected
-          affectedComponents.push({ key: key });
         }
       }
     }
 
-    // Update UI after conversion
-    this._updateUIAfterConversion(affectedComponents);
+    if (conversionCount > 0) {
+      this._updateUIAfterConversion(affectedComponents);
+    }
 
-    // Alert the user about the conversion
     alert(
       `Converted ${conversionCount} item${conversionCount !== 1 ? "s" : ""}`
     );
   }
 
   _updateUIAfterConversion(affectedItems) {
-    // Find the parent section component
-    const sectionComponent =
-      this.closest(".section-wrapper")?.querySelector("section-component");
-    if (!sectionComponent) return;
-
-    // If it's an array section, update the corresponding section items
-    if (Array.isArray(affectedItems) && affectedItems.length > 0) {
-      if (sectionComponent.shadowRoot) {
-        const items =
-          sectionComponent.shadowRoot.querySelectorAll("section-item");
-
-        // Update each affected item in the UI
-        affectedItems.forEach((affected) => {
-          if (affected.index !== undefined) {
-            // Find the array item by index
-            const item = Array.from(items).find(
-              (item) =>
-                item.getAttribute("data-index") === String(affected.index)
-            );
-
-            if (item && item.shadowRoot) {
-              // Find the property input within the item
-              const propertyInput = item.shadowRoot.querySelector(
-                `[data-property="${affected.property}"]`
-              );
-              if (propertyInput) {
-                // Force a re-render of this item
-                item.loadArrayItemData();
-                item.render();
-              }
-            }
-          } else if (affected.key !== undefined) {
-            // Find the direct property item by key
-            const item = Array.from(items).find(
-              (item) => item.getAttribute("data-key") === affected.key
-            );
-
-            if (item) {
-              // Force a re-render
-              item.render();
-            }
-          }
-        });
-      }
+    if (!Array.isArray(affectedItems) || affectedItems.length === 0) {
+      return;
     }
 
-    // Alternatively, trigger a full render of the section
+    const parentNode = this.getRootNode();
+    if (!parentNode || !parentNode.host) return;
+
+    const sectionComponent = parentNode.host;
+    if (!sectionComponent) return;
+
     if (typeof sectionComponent.render === "function") {
+      const dataManager = window.dataManager || this.getDataManager();
+      if (dataManager) {
+        const freshData = dataManager.getSectionData(this.sectionKey);
+        if (freshData) {
+          sectionComponent._data = freshData;
+        }
+      }
+
       sectionComponent.render();
     }
   }
@@ -345,7 +273,6 @@ export class ConversionComponent extends HTMLElement {
   }
 
   getDataManager() {
-    // Try to find DataManager from window or through parent components
     return (
       window.dataManager ||
       document.querySelector("#editor-container")?.dataManager
